@@ -10,9 +10,12 @@ public:
 
 	glm::mat4 GetProjectionMatrix(float w, float h);
 	glm::mat4 GetViewMatrix();
+	glm::vec3 GetPosition();
 
 	void Update();
+
 	static glm::vec3 up;
+	glm::vec3 ambientLight;
 
 private:
 

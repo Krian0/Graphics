@@ -24,20 +24,41 @@ bool Application3D::startup() {
 	// initialise gizmo primitive counts
 	Gizmos::create(10000, 10000, 10000, 10000);
 
-	m_shader.loadShader(aie::eShaderStage::VERTEX, "./shaders/simple.vert");
-	m_shader.loadShader(aie::eShaderStage::FRAGMENT, "./shaders/simple.frag");
+	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "./shaders/phong.vert");
+	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "./shaders/phong.frag");
 
-	if (m_shader.link() == false)
+	m_index = 0;
+
+
+	if (m_phongShader.link() == false)
 	{
-		printf("Shader Error: %s\n", m_shader.getLastError());
+		printf("Shader Error: %s\n", m_phongShader.getLastError());
 		return false;
 	}
 
-	m_quadMesh.initializeQuad();
-	m_quadTransform = { 10, 0, 0, 0,
-						0, 10, 0, 0,
-						0, 0, 10, 0,
-						0, 0, 0,  1 };
+	if (m_spearMesh.load("./soulspear/soulspear.obj", true, true) == false)
+	{
+		printf("Soulspear Mesh Error!\n");
+		return false;
+	}
+
+	m_spearTransform = {
+		1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		0,0,0,1
+	};
+
+	//m_quadMesh.initializeQuad();
+	//m_quadTransform = { 10, 0, 0, 0,
+	//					0, 10, 0, 0,
+	//					0, 0, 10, 0,
+	//					0, 0, 0,  1 };
+
+
+	m_light.diffuse  = { 1, 1, 0 };
+	m_light.specular = { 1, 1, 0 };
+	m_cam.ambientLight = { 0.25f, 0.25f, 0.25f };
 
 	return true;
 }
@@ -51,53 +72,33 @@ void Application3D::update(float deltaTime) {
 
 	// query time since application started
 	float time = getTime();
+	
+
+	m_light.direction = glm::normalize(vec3(glm::cos(time * 2), glm::sin(time * 2), 0));
 
 
-	cam.Update();
+	m_cam.Update();
 
 	// rotate camera
-	m_projectionMatrix = cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight());
-	m_viewMatrix = cam.GetViewMatrix();
+	m_projectionMatrix = m_cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight());
+	m_viewMatrix = m_cam.GetViewMatrix();
 
 	// wipe the gizmos clean for this frame
 	Gizmos::clear();
-
-	//// draw a simple grid with gizmos
-	//vec4 white(1);
-	//vec4 black(0, 0, 0, 1);
-	//for (int i = 0; i < 21; ++i) {
-	//	Gizmos::addLine(vec3(-10 + i, 0, 10),
-	//					vec3(-10 + i, 0, -10),
-	//					i == 10 ? white : black);
-	//	Gizmos::addLine(vec3(10, 0, -10 + i),
-	//					vec3(-10, 0, -10 + i),
-	//					i == 10 ? white : black);
-	//}
-
-	//// add a transform so that we can see the axis
-	//Gizmos::addTransform(mat4(1));
-
-	//// demonstrate a few shapes
-	//Gizmos::addAABBFilled(vec3(0), vec3(1), vec4(0, 0.5f, 1, 0.25f));
-	//Gizmos::addSphere(vec3(5, 0, 5), 1, 8, 8, vec4(1, 0, 0, 0.5f));
-	//Gizmos::addRing(vec3(5, 0, -5), 1, 1.5f, 8, vec4(0, 1, 0, 1));
-	//Gizmos::addDisk(vec3(-5, 0, 5), 1, 16, vec4(1, 1, 0, 1));
-	//Gizmos::addArc(vec3(-5, 0, -5), 0, 2, 1, 8, vec4(1, 0, 1, 1));
-
-	//mat4 t = glm::rotate(mat4(1), time, glm::normalize(vec3(1, 1, 1)));
-	//t[3] = vec4(-2, 0, 0, 1);
-	//Gizmos::addCylinderFilled(vec3(0), 0.5f, 1, 5, vec4(0, 1, 1, 1), &t);
-
-	//// demonstrate 2D gizmos
-	//Gizmos::add2DAABB(glm::vec2(getWindowWidth() / 2, 100),
-	//				  glm::vec2(getWindowWidth() / 2 * (fmod(getTime(), 3.f) / 3), 20),
-	//				  vec4(0, 1, 1, 1));
 
 	// quit if we press escape
 	aie::Input* input = aie::Input::getInstance();
 
 	if (input->isKeyDown(aie::INPUT_KEY_ESCAPE))
 		quit();
+
+	if (input->wasKeyPressed(aie::INPUT_KEY_LEFT))
+		if (m_index > 0)
+			m_index--;
+
+	if (input->wasKeyPressed(aie::INPUT_KEY_RIGHT))
+		if (m_index < 1)
+			m_index++;
 }
 
 void Application3D::draw() {
@@ -106,15 +107,41 @@ void Application3D::draw() {
 	clearScreen();
 
 	// update perspective in case window resized
-	m_projectionMatrix = cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight());
-	m_viewMatrix = cam.GetViewMatrix();
+	m_projectionMatrix = m_cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight());
+	m_viewMatrix = m_cam.GetViewMatrix();
 
-	m_shader.bind();
+	m_phongShader.bind();
+	m_phongShader.bindUniform("cameraPosition", m_cam.GetPosition());
+	m_phongShader.bindUniform("Ia", m_cam.ambientLight);
+	m_phongShader.bindUniform("Id", m_light.diffuse);
+	m_phongShader.bindUniform("Is", m_light.specular);
+	m_phongShader.bindUniform("LightDirection", m_light.direction);
 
-	auto pvm = m_projectionMatrix * m_viewMatrix * m_quadTransform;
-	m_shader.bindUniform("ProjectionViewModel", pvm);
+	//if (m_index == 0)
+	//{
+	//	auto pvm = m_projectionMatrix * m_viewMatrix * m_quadTransform;
+	//	m_phongShader.bindUniform("ProjectionViewModel", pvm);
+	//	
+	//	//m_phongShader.bindUniform("diffuseTexture", 0);
+	//	//m_gridTexture.bind(0);
+	//	m_phongShader.bindUniform("Ka", vec3(0.2f,0.2f,0.2f));
+	//	m_phongShader.bindUniform("Kd", vec3(1.0f, 0.0f, 0.0f));
+	//	m_phongShader.bindUniform("Ks", vec3(1.0f, 1.0f, 1.0f));
+	//	m_phongShader.bindUniform("SpecularPower", 32.0f);
+	//	m_phongShader.bindUniform("ModelMatrix", m_quadTransform);
 
-	m_quadMesh.draw();
+	//	m_quadMesh.draw();
+	//}
+
+	if (m_index == 0)
+	{
+		auto pvm = m_projectionMatrix * m_viewMatrix * m_spearTransform;
+		m_phongShader.bindUniform("ProjectionViewModel", pvm);
+
+		m_phongShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
+
+		m_spearMesh.draw();
+	}
 
 	// draw 3D gizmos
 	Gizmos::draw(m_projectionMatrix * m_viewMatrix);

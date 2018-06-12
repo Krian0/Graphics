@@ -21,6 +21,12 @@ glm::mat4 Camera::GetViewMatrix()
 	return glm::lookAt(position, position + forward, glm::vec3(0, 1, 0));
 }
 
+glm::vec3 Camera::GetPosition()
+{
+	return position;
+}
+
+
 void Camera::Update()
 {
 	aie::Input* input = aie::Input::getInstance();
@@ -51,7 +57,7 @@ void Camera::Update()
 	if (input->isMouseButtonDown(aie::INPUT_MOUSE_BUTTON_RIGHT))
 	{
 		theta += 0.05f * (m.x - lastMouse.x);
-		phi -= 0.05f * (m.y - lastMouse.y);
+		phi += 0.05f * (m.y - lastMouse.y);
 	}
 
 	lastMouse = m;
