@@ -33,16 +33,25 @@ protected:
 	glm::mat4	m_viewMatrix;
 	glm::mat4	m_projectionMatrix;
 
-	aie::ShaderProgram	m_phongShader;
+	aie::ShaderProgram	m_normalMapShader; 
 
-
-	aie::OBJMesh		m_spearMesh;
+	aie::OBJMesh		m_spearMesh; 
 	glm::mat4			m_spearTransform;
-	Light				m_light;
 
+	aie::OBJMesh		m_bunnyMesh;
+	glm::mat4			m_bunnyTransform;
+
+	aie::OBJMesh		m_dragonMesh;
+	glm::mat4			m_dragonTransform;
+
+	aie::OBJMesh		m_buddhaMesh;
+	glm::mat4			m_buddhaTransform;
+
+	aie::OBJMesh		m_lucyMesh;
+	glm::mat4			m_lucyTransform;
+
+	Light				m_light;
 
 	int					m_index;
 
-	//Mesh				m_quadMesh;
-	//glm::mat4			m_quadTransform;
 };

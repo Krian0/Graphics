@@ -39,18 +39,18 @@ void Camera::Update()
 	float deltaTime = 0.1f;
 
 	if (input->isKeyDown(aie::INPUT_KEY_X))
-		position += up * deltaTime;
+		position += up * (deltaTime / 2);
 	if (input->isKeyDown(aie::INPUT_KEY_Z))
-		position += -up * deltaTime;
+		position += -up * (deltaTime / 2);
 
 	if (input->isKeyDown(aie::INPUT_KEY_W))
-		position += forward * deltaTime;
+		position += forward * (deltaTime / 2);
 	if (input->isKeyDown(aie::INPUT_KEY_A))
-		position += -right * deltaTime;
+		position += -right * (deltaTime / 2);
 	if (input->isKeyDown(aie::INPUT_KEY_S))
-		position += -forward * deltaTime;
+		position += -forward * (deltaTime / 2);
 	if (input->isKeyDown(aie::INPUT_KEY_D))
-		position += right * deltaTime;
+		position += right * (deltaTime / 2);
 
 	glm::vec2 m = glm::vec2(input->getMouseX(), input->getMouseY());
 
