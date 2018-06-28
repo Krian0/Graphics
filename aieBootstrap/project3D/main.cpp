@@ -11,5 +11,6 @@ int main() {
 	// deallocation
 	delete app;
 
+	system("pause");
 	return 0;
 }

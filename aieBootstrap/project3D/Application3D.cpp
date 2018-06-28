@@ -26,6 +26,18 @@ bool Application3D::startup()
 	// initialise gizmo primitive counts
 	Gizmos::create(10000, 10000, 10000, 10000);
 
+
+	m_phongShader.loadShader(aie::eShaderStage::VERTEX, "./shaders/phong.vert");
+	m_phongShader.loadShader(aie::eShaderStage::FRAGMENT, "./shaders/phong.frag");
+
+
+	if (m_phongShader.link() == false)
+	{
+		printf("Shader Error: %s\n", m_phongShader.getLastError());
+		return false;
+	}
+
+
 	m_normalMapShader.loadShader(aie::eShaderStage::VERTEX, "./shaders/normalmap.vert");
 	m_normalMapShader.loadShader(aie::eShaderStage::FRAGMENT, "./shaders/normalmap.frag");
 
@@ -146,47 +158,64 @@ void Application3D::draw()
 	m_projectionMatrix = m_cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight());
 	m_viewMatrix = m_cam.GetViewMatrix();
 
-	m_normalMapShader.bind();
-	m_normalMapShader.bindUniform("cameraPosition", m_cam.GetPosition());
-	m_normalMapShader.bindUniform("Ia", m_cam.ambientLight);
-	m_normalMapShader.bindUniform("Id", m_light.diffuse);
-	m_normalMapShader.bindUniform("Is", m_light.specular);
-	m_normalMapShader.bindUniform("lightDirection", m_light.direction);
 
 	if (m_index == 0) 
 	{
+		m_normalMapShader.bind();
+		m_normalMapShader.bindUniform("cameraPosition", m_cam.GetPosition());
+		m_normalMapShader.bindUniform("Ia", m_cam.ambientLight);
+		m_normalMapShader.bindUniform("Id", m_light.diffuse);
+		m_normalMapShader.bindUniform("Is", m_light.specular);
+		m_normalMapShader.bindUniform("lightDirection", m_light.direction);
+
 		auto pvm = m_projectionMatrix * m_viewMatrix * m_spearTransform;
 		m_normalMapShader.bindUniform("ProjectionViewModel", pvm);
 		m_normalMapShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_spearTransform)));
 		m_spearMesh.draw();
 	}
+	else
+	{
+		m_phongShader.bind();
+		m_phongShader.bindUniform("cameraPosition", m_cam.GetPosition());
+		m_phongShader.bindUniform("Ia", m_cam.ambientLight);
+		m_phongShader.bindUniform("Id", m_light.diffuse);
+		m_phongShader.bindUniform("Is", m_light.specular);
+		m_phongShader.bindUniform("lightDirection", m_light.direction);
+
+
+	}
 
 	if (m_index == 1)
 	{
 		auto pvm = m_projectionMatrix * m_viewMatrix * m_bunnyTransform;
-		m_normalMapShader.bindUniform("ProjectionViewModel", pvm);
-		m_normalMapShader.bindUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(m_bunnyTransform)));
+		m_phongShader.bindUniform("ProjectionViewModel", pvm);
+		m_phongShader.bindUniform("ModelMatrix", m_bunnyTransform);
+
 		m_bunnyMesh.draw();
 	}
 
 	if (m_index == 2)
 	{
-		auto pvm = m_projectionMatrix * m_viewMatrix * m_bunnyTransform;
-		m_normalMapShader.bindUniform("ProjectionViewModel", pvm);
+		auto pvm = m_projectionMatrix * m_viewMatrix * m_dragonTransform;
+		m_phongShader.bindUniform("ProjectionViewModel", pvm);
+		m_phongShader.bindUniform("ModelMatrix", m_dragonTransform);
+
 		m_dragonMesh.draw();
 	}
 
 	if (m_index == 3)
 	{
-		auto pvm = m_projectionMatrix * m_viewMatrix * m_bunnyTransform;
-		m_normalMapShader.bindUniform("ProjectionViewModel", pvm);
+		auto pvm = m_projectionMatrix * m_viewMatrix * m_buddhaTransform;
+		m_phongShader.bindUniform("ProjectionViewModel", pvm);
+		m_phongShader.bindUniform("ModelMatrix", m_buddhaTransform);
 		m_buddhaMesh.draw();
 	}
 
 	if (m_index == 4)
 	{
-		auto pvm = m_projectionMatrix * m_viewMatrix * m_bunnyTransform;
-		m_normalMapShader.bindUniform("ProjectionViewModel", pvm);
+		auto pvm = m_projectionMatrix * m_viewMatrix * m_lucyTransform;
+		m_phongShader.bindUniform("ProjectionViewModel", pvm);
+		m_phongShader.bindUniform("ModelMatrix", m_lucyTransform);
 		m_lucyMesh.draw();
 	}
 

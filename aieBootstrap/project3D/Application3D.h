@@ -33,7 +33,8 @@ protected:
 	glm::mat4	m_viewMatrix;
 	glm::mat4	m_projectionMatrix;
 
-	aie::ShaderProgram	m_normalMapShader; 
+	aie::ShaderProgram	m_phongShader; 
+	aie::ShaderProgram	m_normalMapShader;
 
 	aie::OBJMesh		m_spearMesh; 
 	glm::mat4			m_spearTransform;
